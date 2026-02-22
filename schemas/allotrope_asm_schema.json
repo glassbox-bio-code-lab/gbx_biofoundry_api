@@ -1,0 +1,39 @@
+{
+  "$asm.manifest": "http://purl.allotrope.org/manifests/plate-reader/REC/2023/09/plate-reader.manifest",
+  "measurement aggregate document": {
+    "measurement document": [
+      {
+        "measurement identifier": "gfp_expression_data_run001",
+        "measurement time": "2026-02-22T03:00:00Z",
+        "analytical method identifier": "fluorescence_488_520",
+        "device system document": {
+          "device identifier": "plate_reader_tecan_spark_001",
+          "firmware version": "v2.3.0"
+        },
+        "fluorescence point detection aggregate document": {
+          "fluorescence point detection document": [
+            {
+              "sample document": {
+                "sample identifier": "dest_plate/A1",
+                "batch identifier": "batch_20260221_001",
+                "sample role type": "experimental sample"
+              },
+              "fluorescence": {
+                "value": 45230.5,
+                "unit": "RFU"
+              },
+              "excitation wavelength": {
+                "value": 488,
+                "unit": "nm"
+              },
+              "emission wavelength": {
+                "value": 520,
+                "unit": "nm"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

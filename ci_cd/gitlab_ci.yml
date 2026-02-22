@@ -1,0 +1,13 @@
+validate_design:
+  stage: pre-execution
+  script:
+    - curl -X POST "https://glassbox-api.your-org.com/validate/design" -F "sbol_le=@designs/candidate_001.sbol"
+  only:
+    - main
+
+validate_data:
+  stage: post-execution
+  script:
+    - curl -X POST "https://glassbox-api.your-org.com/validate/data" -F "allotrope_le=@results/exp_001.json" -F "sbol_provenance_le=@results/exp_001_prov.sbol"
+  only:
+    - main

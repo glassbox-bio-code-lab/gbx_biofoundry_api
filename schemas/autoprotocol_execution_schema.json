@@ -1,0 +1,39 @@
+{
+  "protocol_id": "protocol_{uuid}",
+  "protocol_name": "Build and assay GFP construct",
+  "generated_by": {
+    "ai_model": "model_v2.3.1",
+    "timestamp": "2026-02-21T21:00:00Z",
+    "design_uri": "https://glassbox-bio.com/design/{design_id}"
+  },
+  "instructions": [
+    {
+      "op": "transfer",
+      "groups": [
+        {
+          "transfer": [
+            {
+              "from": "source_plate/A1",
+              "to": "dest_plate/A1",
+              "volume": "5:microliter"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "op": "incubate",
+      "object": "dest_plate",
+      "where": "warm_37",
+      "duration": "18:hour",
+      "shaking": { "amplitude": "3:millimeter", "frequency": "200:hertz" }
+    },
+    {
+      "op": "fluorescence",
+      "object": "dest_plate",
+      "excitation": "488:nanometer",
+      "emission": "520:nanometer",
+      "dataref": "gfp_expression_data"
+    }
+  ]
+}

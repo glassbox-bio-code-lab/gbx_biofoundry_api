@@ -1,0 +1,56 @@
+// glassbox_validation_element.an
+// Antha element that validates designs before execution
+protocol GlassboxPreValidation
+import (
+  "github.com/antha-lang/antha/antha/anthalib/wtype"
+  "github.com/antha-lang/antha/antha/anthalib/mixer"
+  "net/http"
+  "bytes"
+  "encoding/json"
+  "io/ioutil"
+)
+Parameters {
+  DesignFile DNASequence
+  GlassboxAPIEndpoint string // e.g., "https://glassbox-api.your-org.com"
+}
+Data {
+  ValidationPassed bool
+  ValidationErrors []string
+  DesignHash string
+}
+Inputs {}
+Outputs {}
+Requirements {}
+Setup {}
+Steps {
+  // Convert design to SBOL3 format
+  sbolData := ConvertToSBOL(DesignFile)
+  // Call Glassbox validation API
+  validationURL := GlassboxAPIEndpoint + "/validate/design"
+  var requestBody bytes.Buffer
+  writer := multipart.NewWriter(&requestBody)
+  part, _ := writer.CreateFormFile("sbol_le", "design.sbol")
+  part.Write(sbolData)
+  writer.Close()
+  resp, err := http.Post(validationURL, writer.FormDataContentType(), &requestBody)
+  if err != nil {
+    panic("Glassbox API unreachable: " + err.Error())
+  }
+  defer resp.Body.Close()
+  // Parse response
+  body, _ := ioutil.ReadAll(resp.Body)
+  var result map[string]interface{}
+  json.Unmarshal(body, &result)
+  ValidationPassed = result["is_valid"].(bool)
+  DesignHash = result["design_hash"].(string)
+  if errors, ok := result["errors"].([]interface{}); ok {
+    for _, err := range errors {
+      ValidationErrors = append(ValidationErrors, err.(string))
+    }
+  }
+  if !ValidationPassed {
+    panic("Design validation failed. Halting execution.")
+  }
+}
+Analysis {}
+Validation {}

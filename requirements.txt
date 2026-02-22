@@ -1,0 +1,7 @@
+pySBOL3
+jsonschema
+pandas
+numpy
+fastapi
+uvicorn
+temple

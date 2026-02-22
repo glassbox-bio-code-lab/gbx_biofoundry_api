@@ -1,0 +1,272 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://glassbox.bio/schemas/audit_response.schema.json",
+  "title": "AuditResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "const": "audit_response_v1" },
+
+    "run_id": { "type": "string", "minLength": 8 },
+    "intent_id": { "type": "string", "minLength": 8 },
+    "project_id": { "type": "string", "minLength": 3 },
+
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "policy_id": { "type": "string" },
+        "policy_version": { "type": "string" },
+        "score_model_version": {
+          "type": "string",
+          "description": "Version of admissibility computation logic."
+        }
+      },
+      "required": ["policy_id", "policy_version", "score_model_version"]
+    },
+
+    "decision": {
+      "type": "string",
+      "enum": ["pass", "warn", "fail", "pass_via_attestation"]
+    },
+
+    "admissibility_index": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+
+    "score_breakdown": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "base_score": { "type": "number" },
+        "module_contributions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ModuleContribution" },
+          "default": []
+        },
+        "penalties": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Penalty" },
+          "default": []
+        }
+      },
+      "required": ["base_score", "module_contributions", "penalties"]
+    },
+
+    "blocking_findings": {
+      "type": "array",
+      "default": [],
+      "items": { "$ref": "#/$defs/Finding" }
+    },
+
+    "findings": {
+      "type": "array",
+      "default": [],
+      "items": { "$ref": "#/$defs/Finding" }
+    },
+
+    "revision_packet": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": { "type": "string", "enum": ["resubmit_with_changes"] },
+        "required_changes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ConstraintPatch" },
+          "default": []
+        },
+        "recommended_next_actions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        }
+      },
+      "required": ["mode", "required_changes"]
+    },
+
+    "seal": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "seal_version": { "type": "string", "const": "glassbox_seal_v1" },
+        "seal_id": { "type": "string" },
+        "algorithm": {
+          "type": "string",
+          "enum": ["ed25519_detached", "sha256_manifest"]
+        },
+
+        "design_payload_sha256": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64}$"
+        },
+        "evidence_sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
+        "manifest_sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
+
+        "policy_id": { "type": "string" },
+        "policy_version": { "type": "string" },
+
+        "decision": { "type": "string" },
+        "admissibility_index": { "type": "number" },
+
+        "issued_at_utc": { "type": "string", "format": "date-time" },
+        "expires_at_utc": { "type": "string", "format": "date-time" },
+
+        "signing_key_id": { "type": "string" },
+        "signature": { "type": "string", "minLength": 32 }
+      },
+      "required": [
+        "seal_version",
+        "seal_id",
+        "algorithm",
+        "design_payload_sha256",
+        "manifest_sha256",
+        "policy_id",
+        "policy_version",
+        "decision",
+        "admissibility_index",
+        "issued_at_utc",
+        "signature"
+      ]
+    },
+
+    "bundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bundle_id": { "type": "string" },
+        "artifact_index": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ArtifactRef" },
+          "default": []
+        }
+      },
+      "required": ["bundle_id", "artifact_index"]
+    },
+
+    "attestation_verification": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "used": { "type": "boolean" },
+        "attestation_id": { "type": "string" },
+        "attestor_id": { "type": "string" },
+        "result": { "type": "string", "enum": ["accepted", "rejected"] },
+        "reason": { "type": "string" }
+      },
+      "required": ["used", "result"]
+    }
+  },
+
+  "required": [
+    "schema_version",
+    "run_id",
+    "intent_id",
+    "project_id",
+    "policy",
+    "decision",
+    "admissibility_index",
+    "score_breakdown",
+    "blocking_findings",
+    "findings",
+    "bundle"
+  ],
+
+  "$defs": {
+    "Finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "finding_id": { "type": "string" },
+        "code": { "type": "string" },
+        "title": { "type": "string" },
+        "severity": {
+          "type": "string",
+          "enum": ["info", "low", "medium", "high", "critical"]
+        },
+        "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "scope": { "type": "object", "additionalProperties": true },
+        "metrics": { "type": "object", "additionalProperties": true },
+        "evidence_refs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "recommended_actions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        }
+      },
+      "required": [
+        "finding_id",
+        "code",
+        "title",
+        "severity",
+        "confidence",
+        "category"
+      ]
+    },
+
+    "ConstraintPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "patch_id": { "type": "string" },
+        "target": { "type": "object", "additionalProperties": true },
+        "action": {
+          "type": "string",
+          "enum": ["tighten_bounds", "forbid", "require", "recommend"]
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": {}
+        },
+        "rationale": { "type": "string" }
+      },
+      "required": ["patch_id", "target", "action"]
+    },
+
+    "ModuleContribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "module_id": { "type": "string" },
+        "weight": { "type": "number", "minimum": 0, "maximum": 1 },
+        "score": { "type": "number", "minimum": 0, "maximum": 100 },
+        "weighted_score": { "type": "number", "minimum": 0, "maximum": 100 }
+      },
+      "required": ["module_id", "weight", "score", "weighted_score"]
+    },
+
+    "Penalty": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "penalty_code": { "type": "string" },
+        "amount": {
+          "type": "number",
+          "description": "Negative number lowers the score."
+        },
+        "reason": { "type": "string" }
+      },
+      "required": ["penalty_code", "amount", "reason"]
+    },
+
+    "ArtifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": { "type": "string" },
+        "media_type": { "type": "string" },
+        "sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
+        "size_bytes": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["path", "media_type", "sha256", "size_bytes"]
+    }
+  }
+}

@@ -1,0 +1,20 @@
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:sbol="http://sbols.org/v3#"
+         xmlns:prov="http://www.w3.org/ns/prov#">
+  <!-- AI-Generated Component Design -->
+  <sbol:Component rdf:about="https://glassbox-bio.com/design/{design_id}">
+    <sbol:displayId>{design_id}</sbol:displayId>
+    <sbol:name>{human_readable_name}</sbol:name>
+    <sbol:description>{design_rationale}</sbol:description>
+    <sbol:type rdf:resource="http://identifiers.org/SBO:0000251"/>
+    <sbol:sequence rdf:resource="https://glassbox-bio.com/sequence/{seq_id}"/>
+    <!-- AI Model Provenance -->
+    <prov:wasGeneratedBy rdf:resource="https://glassbox-bio.com/ai-model/{model_id}"/>
+    <prov:generatedAtTime>{ISO8601_timestamp}</prov:generatedAtTime>
+  </sbol:Component>
+  <!-- Sequence Definition -->
+  <sbol:Sequence rdf:about="https://glassbox-bio.com/sequence/{seq_id}">
+    <sbol:elements>{DNA_sequence_string}</sbol:elements>
+    <sbol:encoding rdf:resource="http://www.chem.qmul.ac.uk/iubmb/misc/naseq.html"/>
+  </sbol:Sequence>
+</rdf:RDF>

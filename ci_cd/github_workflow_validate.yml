@@ -1,0 +1,18 @@
+name: Validate Biofoundry
+on:
+  push:
+    branches:
+      - main
+jobs:
+  validate_design:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate Design
+        run: |
+          curl -X POST "https://glassbox-api.your-org.com/validate/design" -F "sbol_le=@designs/candidate_001.sbol"
+  validate_data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate Data
+        run: |
+          curl -X POST "https://glassbox-api.your-org.com/validate/data" -F "allotrope_le=@results/exp_001.json" -F "sbol_provenance_le=@results/exp_001_prov.sbol"

@@ -1,0 +1,31 @@
+// main_workflow.an
+// Complete Antha workflow with Glassbox validation gates
+protocol BiofoundryWorkflowWithValidation
+import (
+  "github.com/antha-lang/antha/antha/anthalib/wtype"
+)
+Parameters {
+  AIGeneratedDesigns []DNASequence
+  GlassboxEndpoint string
+}
+Setup {}
+Steps {
+  // GATE 1: Pre-execution validation
+  for _, design := range AIGeneratedDesigns {
+    validation := GlassboxPreValidation {
+      DesignFile: design,
+      GlassboxAPIEndpoint: GlassboxEndpoint,
+    }
+    if !validation.ValidationPassed {
+      log.Printf("Design rejected: %v", validation.ValidationErrors)
+      continue
+    }
+    log.Printf("Design approved. Hash: %s", validation.DesignHash)
+    // Proceed to robotic execution
+    BuildConstruct(design)
+    AssayConstruct(design)
+  }
+  // GATE 2: Post-execution validation (after all experiments)
+  PostValidateResults(GlassboxEndpoint)
+}
+Analysis {}

@@ -1,0 +1,261 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://glassbox.bio/schemas/design_intent.schema.json",
+  "title": "DesignIntent",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "design_intent_v1"
+    },
+
+    "intent_id": {
+      "type": "string",
+      "minLength": 8,
+      "description": "Client-generated id for idempotency and traceability."
+    },
+
+    "project_id": {
+      "type": "string",
+      "minLength": 3
+    },
+
+    "submitted_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+
+    "generator": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "system": {
+          "type": "string",
+          "description": "e.g., openai, inhouse_agent, partner_platform"
+        },
+        "model": {
+          "type": "string",
+          "description": "e.g., gpt-5, custom_fm_v3"
+        },
+        "run_id": { "type": "string" },
+        "prompt_hash": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
+        "tooling": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "required": ["system", "model"]
+    },
+
+    "requested_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "policy_id": { "type": "string", "minLength": 1 },
+        "policy_version": { "type": "string", "minLength": 1 },
+        "admissibility_target": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Optional client-supplied target; final threshold is dictated by policy server-side."
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["audit_only", "gate_for_execution", "iterate_until_pass"],
+          "default": "gate_for_execution"
+        }
+      },
+      "required": ["policy_id"]
+    },
+
+    "design": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "design_type": {
+          "type": "string",
+          "enum": [
+            "protein_sequence",
+            "nucleic_acid_construct",
+            "pathway_edit",
+            "strain_edit",
+            "cfps_mixture",
+            "metabolic_route",
+            "other"
+          ]
+        },
+
+        "payload": {
+          "type": "object",
+          "description": "Opaque payload; adapter will normalize. Must be JSON-serializable."
+        },
+
+        "payload_sha256": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64}$",
+          "description": "Hash of canonical JSON serialization of `design.payload`."
+        },
+
+        "conditions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Assumed operating conditions (pH, temp, host strain, oxygen, etc.)."
+        }
+      },
+      "required": ["design_type", "payload", "payload_sha256"]
+    },
+
+    "claims": {
+      "type": "array",
+      "default": [],
+      "items": { "$ref": "#/$defs/Claim" }
+    },
+
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "type": "array",
+          "default": [],
+          "items": { "$ref": "#/$defs/EvidenceItem" }
+        },
+        "evidence_sha256": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64}$",
+          "description": "Hash of canonical JSON serialization of evidence index."
+        }
+      },
+      "required": ["items"]
+    },
+
+    "attestations": {
+      "type": "array",
+      "default": [],
+      "items": { "$ref": "#/$defs/ExternalAttestation" },
+      "description": "Optional: prior audits / external attestations that may trigger bypass."
+    },
+
+    "reply": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["sync", "async_callback"],
+          "default": "sync"
+        },
+        "callback_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Only used when mode=async_callback."
+        },
+        "client_correlation_id": {
+          "type": "string"
+        }
+      }
+    }
+  },
+
+  "required": [
+    "schema_version",
+    "intent_id",
+    "project_id",
+    "submitted_at_utc",
+    "requested_policy",
+    "design",
+    "evidence"
+  ],
+
+  "$defs": {
+    "Claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "claim_id": { "type": "string", "minLength": 1 },
+        "metric": {
+          "type": "string",
+          "minLength": 1,
+          "description": "e.g., titer_gL, yield_percent, kd_nM, stability_days"
+        },
+        "direction": {
+          "type": "string",
+          "enum": ["increase", "decrease", "match"]
+        },
+        "value": { "type": "number" },
+        "unit": { "type": "string" },
+        "baseline_value": { "type": "number" },
+        "baseline_unit": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "notes": { "type": "string" }
+      },
+      "required": ["claim_id", "metric", "direction", "value"]
+    },
+
+    "EvidenceItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": { "type": "string", "minLength": 1 },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "model_output",
+            "dataset_ref",
+            "literature_ref",
+            "prior_experiment",
+            "simulation",
+            "other"
+          ]
+        },
+        "uri": { "type": "string", "format": "uri" },
+        "sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
+        "media_type": { "type": "string", "default": "application/json" },
+        "summary": { "type": "string" },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "required": ["evidence_id", "kind"]
+    },
+
+    "ExternalAttestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "attestation_id": { "type": "string", "minLength": 1 },
+        "attestor_id": { "type": "string", "minLength": 1 },
+        "attestation_type": { "type": "string", "minLength": 1 },
+        "attested_payload_sha256": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64}$"
+        },
+        "issued_at_utc": { "type": "string", "format": "date-time" },
+        "expires_at_utc": { "type": "string", "format": "date-time" },
+        "signature": {
+          "type": "string",
+          "minLength": 32,
+          "description": "Detached signature (base64 or hex), format defined by attestor."
+        },
+        "public_key_hint": {
+          "type": "string",
+          "description": "Optional key id / KMS reference."
+        },
+        "claims": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "attestation_id",
+        "attestor_id",
+        "attestation_type",
+        "attested_payload_sha256",
+        "issued_at_utc",
+        "signature"
+      ]
+    }
+  }
+}

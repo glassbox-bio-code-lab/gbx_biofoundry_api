@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://glassbox.bio/schemas/audit_policy.schema.json",
+  "title": "AuditPolicy",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "const": "audit_policy_v1" },
+
+    "policy_id": { "type": "string", "minLength": 1 },
+    "policy_version": { "type": "string", "minLength": 1 },
+
+    "admissibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pass_threshold": { "type": "number", "minimum": 0, "maximum": 100 },
+        "warn_threshold": { "type": "number", "minimum": 0, "maximum": 100 },
+        "hard_fail_codes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "require_modules": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "score_model_version": { "type": "string", "default": "adm_v1" }
+      },
+      "required": [
+        "pass_threshold",
+        "warn_threshold",
+        "hard_fail_codes",
+        "require_modules",
+        "score_model_version"
+      ]
+    },
+
+    "modules": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/ModulePolicy" }
+    },
+
+    "attestation_bypass": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "mode": {
+          "type": "string",
+          "enum": ["full_bypass", "partial_bypass"],
+          "default": "partial_bypass"
+        },
+        "trusted_attestors": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/TrustedAttestor" },
+          "default": []
+        },
+        "max_age_days": { "type": "integer", "minimum": 0, "default": 180 }
+      },
+      "required": ["enabled", "mode", "trusted_attestors", "max_age_days"]
+    },
+
+    "sealing": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "algorithm": {
+          "type": "string",
+          "enum": ["ed25519_detached", "sha256_manifest"],
+          "default": "ed25519_detached"
+        },
+        "seal_ttl_days": { "type": "integer", "minimum": 1, "default": 30 },
+        "key_id": { "type": "string" }
+      },
+      "required": ["enabled", "algorithm", "seal_ttl_days"]
+    }
+  },
+
+  "required": [
+    "schema_version",
+    "policy_id",
+    "policy_version",
+    "admissibility",
+    "modules"
+  ],
+
+  "$defs": {
+    "ModulePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "module_id": { "type": "string", "minLength": 1 },
+        "enabled": { "type": "boolean", "default": true },
+        "weight": { "type": "number", "minimum": 0, "maximum": 1 },
+        "params": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": {}
+        },
+        "fail_on_codes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        }
+      },
+      "required": ["module_id", "enabled", "weight", "params", "fail_on_codes"]
+    },
+
+    "TrustedAttestor": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "attestor_id": { "type": "string", "minLength": 1 },
+        "allowed_types": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "public_keys": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        }
+      },
+      "required": ["attestor_id", "allowed_types", "public_keys"]
+    }
+  }
+}

@@ -1,0 +1,31 @@
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:sbol="http://sbols.org/v3#"
+         xmlns:prov="http://www.w3.org/ns/prov#">
+  <!-- Physical Implementation -->
+  <sbol:Implementation rdf:about="https://glassbox-bio.com/build/{build_id}">
+    <sbol:displayId>{build_id}</sbol:displayId>
+    <sbol:built rdf:resource="https://glassbox-bio.com/design/{design_id}"/>
+    <prov:wasGeneratedBy rdf:resource="https://glassbox-bio.com/robot/{robot_id}"/>
+  </sbol:Implementation>
+  <!-- Experiment Execution -->
+  <sbol:Experiment rdf:about="https://glassbox-bio.com/experiment/{exp_id}">
+    <sbol:displayId>{exp_id}</sbol:displayId>
+    <sbol:member rdf:resource="https://glassbox-bio.com/build/{build_id}"/>
+    <prov:startedAtTime>{ISO8601_start}</prov:startedAtTime>
+    <prov:endedAtTime>{ISO8601_end}</prov:endedAtTime>
+  </sbol:Experiment>
+  <!-- Experimental Data with Validation Status -->
+  <sbol:ExperimentalData rdf:about="https://glassbox-bio.com/data/{data_id}">
+    <sbol:displayId>{data_id}</sbol:displayId>
+    <sbol:attachment rdf:resource="https://glassbox-bio.com/files/{filename}.json"/>
+    <prov:wasGeneratedBy rdf:resource="https://glassbox-bio.com/experiment/{exp_id}"/>
+    <!-- Glassbox Validation Attestation -->
+    <prov:wasAttributedTo rdf:resource="https://glassbox-bio.com/validator/v1"/>
+    <sbol:measure>
+      <sbol:Measure>
+        <sbol:type rdf:resource="https://glassbox-bio.com/validation-score"/>
+        <sbol:value>0.97</sbol:value>
+      </sbol:Measure>
+    </sbol:measure>
+  </sbol:ExperimentalData>
+</rdf:RDF>
